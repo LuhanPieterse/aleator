@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALEATOR - The Dice Descends</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        :root {
+            --pixel-black: #0f0f1b;
+            --pixel-dark: #1a1a2e;
+            --pixel-purple: #6b2d5c;
+            --pixel-red: #c53a2b;
+            --pixel-orange: #e07b39;
+            --pixel-yellow: #f2d492;
+            --pixel-gold: #ffb347;
+            --pixel-cyan: #4ecdc4;
+            --pixel-white: #f7f7f7;
+            --pixel-gray: #3d3d5c;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: var(--pixel-black);
+            color: var(--pixel-white);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Scanline effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 0, 0, 0.15) 3px
+            );
+            z-index: 1000;
+            animation: scanlines 8s linear infinite;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(4px); }
+        }
+
+        .game-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .pixel-border {
+            border: 4px solid var(--pixel-purple);
+            box-shadow: 
+                0 0 0 2px var(--pixel-black),
+                0 0 0 6px var(--pixel-dark),
+                0 8px 0 0 var(--pixel-purple),
+                0 8px 20px 0 rgba(107, 45, 92, 0.5);
+        }
+
+        .pixel-border-thin {
+            border: 3px solid var(--pixel-gray);
+            box-shadow: 
+                0 0 0 1px var(--pixel-black),
+                inset 0 0 0 1px var(--pixel-black);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: glitch 3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translate(0); }
+            91% { transform: translate(-2px, 2px); }
+            92% { transform: translate(2px, -2px); }
+            93% { transform: translate(-2px, -2px); }
+        }
+
+        h1 {
+            font-size: 3em;
+            color: var(--pixel-gold);
+            text-shadow: 
+                4px 4px 0 var(--pixel-orange),
+                8px 8px 0 var(--pixel-red),
+                12px 12px 20px rgba(197, 58, 43, 0.6);
+            margin-bottom: 15px;
+            letter-spacing: 4px;
+        }
+
+        .subtitle {
+            font-size: 0.6em;
+            color: var(--pixel-cyan);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            background: var(--pixel-dark);
+            padding: 12px 18px;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.5em;
+            color: var(--pixel-gray);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1em;
+            color: var(--pixel-gold);
+            text-shadow: 2px 2px 0 var(--pixel-orange);
+        }
+
+        .game-area {
+            background: var(--pixel-dark);
+            padding: 30px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        /* Pixel corner decorations */
+        .game-area::before,
+        .game-area::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--pixel-gold);
+        }
+
+        .game-area::before {
+            top: -4px;
+            left: -4px;
+            box-shadow: 
+                8px 0 0 var(--pixel-gold),
+                0 8px 0 var(--pixel-gold);
+        }
+
+        .game-area::after {
+            bottom: -4px;
+            right: -4px;
+            box-shadow: 
+                -8px 0 0 var(--pixel-gold),
+                0 -8px 0 var(--pixel-gold);
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 35px 0;
+            flex-wrap: wrap;
+        }
+
+        .die {
+            width: 90px;
+            height: 90px;
+            background: var(--pixel-white);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s;
+            font-size: 0;
+        }
+
+        .die:hover {
+            transform: scale(1.1);
+        }
+
+        .die.held {
+            background: var(--pixel-gold);
+            animation: bounce 0.5s;
+        }
+
+        .die.special {
+            background: var(--pixel-cyan);
+        }
+
+        .die.held.special {
+            background: var(--pixel-orange);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Pixel art dice dots */
+        .die-dot {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: var(--pixel-black);
+            box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .die.held .die-dot,
+        .die.special .die-dot {
+            background: var(--pixel-white);
+        }
+
+        /* Dice dot positions */
+        .dot-center { top: 38px; left: 38px; }
+        .dot-tl { top: 18px; left: 18px; }
+        .dot-tr { top: 18px; right: 18px; }
+        .dot-ml { top: 38px; left: 18px; }
+        .dot-mr { top: 38px; right: 18px; }
+        .dot-bl { bottom: 18px; left: 18px; }
+        .dot-br { bottom: 18px; right: 18px; }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        .pixel-btn {
+            padding: 15px 25px;
+            font-size: 0.7em;
+            font-family: 'Press Start 2P', cursive;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            position: relative;
+            transition: transform 0.1s;
+            background: var(--pixel-orange);
+            color: var(--pixel-white);
+            box-shadow: 
+                0 6px 0 var(--pixel-red),
+                0 8px 15px rgba(197, 58, 43, 0.4);
+        }
+
+        .pixel-btn:hover:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 
+                0 4px 0 var(--pixel-red),
+                0 6px 15px rgba(197, 58, 43, 0.4);
+        }
+
+        .pixel-btn:active:not(:disabled) {
+            transform: translateY(6px);
+            box-shadow: 
+                0 0 0 var(--pixel-red),
+                0 2px 15px rgba(197, 58, 43, 0.4);
+        }
+
+        .pixel-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: var(--pixel-gray);
+            box-shadow: 0 6px 0 #2a2a3c;
+        }
+
+        .pixel-btn-secondary {
+            background: var(--pixel-purple);
+            box-shadow: 
+                0 6px 0 #4a1f3d,
+                0 8px 15px rgba(107, 45, 92, 0.4);
+        }
+
+        .pixel-btn-secondary:hover:not(:disabled) {
+            box-shadow: 
+                0 4px 0 #4a1f3d,
+                0 6px 15px rgba(107, 45, 92, 0.4);
+        }
+
+        .scoring-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .score-option {
+            background: var(--pixel-dark);
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .score-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px solid transparent;
+            pointer-events: none;
+        }
+
+        .score-option:hover:not(.used)::before {
+            border-color: var(--pixel-gold);
+            animation: pulse-border 1s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .score-option.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: #0a0a12;
+        }
+
+        .score-option.best::before {
+            border-color: var(--pixel-cyan);
+            animation: glow 1s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { 
+                border-color: var(--pixel-cyan);
+                filter: drop-shadow(0 0 8px var(--pixel-cyan));
+            }
+            50% { 
+                border-color: var(--pixel-gold);
+                filter: drop-shadow(0 0 12px var(--pixel-gold));
+            }
+        }
+
+        .option-name {
+            font-size: 0.6em;
+            margin-bottom: 8px;
+            color: var(--pixel-gold);
+            text-transform: uppercase;
+        }
+
+        .option-score {
+            font-size: 1.2em;
+            color: var(--pixel-white);
+        }
+
+        .shop {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .shop-item {
+            background: var(--pixel-dark);
+            padding: 20px;
+            position: relative;
+        }
+
+        .shop-item h3 {
+            color: var(--pixel-gold);
+            font-size: 0.7em;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .shop-item p {
+            font-size: 0.5em;
+            line-height: 1.8;
+            margin: 12px 0;
+            color: var(--pixel-white);
+        }
+
+        .shop-item .price {
+            font-size: 0.8em;
+            color: var(--pixel-cyan);
+            margin: 15px 0;
+        }
+
+        .message {
+            text-align: center;
+            padding: 20px;
+            margin: 25px 0;
+            font-size: 0.7em;
+            background: var(--pixel-dark);
+            border: 4px solid var(--pixel-cyan);
+            animation: message-appear 0.3s;
+        }
+
+        @keyframes message-appear {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .message.warning {
+            border-color: var(--pixel-red);
+            background: rgba(197, 58, 43, 0.2);
+        }
+
+        .upgrades-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .upgrade-badge {
+            background: var(--pixel-purple);
+            padding: 10px 16px;
+            font-size: 0.5em;
+            box-shadow: 
+                0 4px 0 #4a1f3d,
+                0 6px 10px rgba(107, 45, 92, 0.5);
+            text-transform: uppercase;
+            animation: badge-appear 0.5s;
+        }
+
+        @keyframes badge-appear {
+            0% { transform: scale(0) rotate(-180deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+
+        .stage-info {
+            text-align: center;
+            font-size: 0.8em;
+            margin: 20px 0;
+            color: var(--pixel-gold);
+            text-transform: uppercase;
+        }
+
+        .boss-warning {
+            background: var(--pixel-red);
+            padding: 25px;
+            text-align: center;
+            margin: 25px 0;
+            font-size: 0.7em;
+            animation: boss-pulse 1.5s infinite;
+            border: 4px solid var(--pixel-orange);
+            position: relative;
+        }
+
+        @keyframes boss-pulse {
+            0%, 100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.02);
+                filter: brightness(1.2);
+            }
+        }
+
+        .boss-warning::before {
+            content: '⚠';
+            position: absolute;
+            left: 20px;
+            font-size: 2em;
+            animation: warning-blink 0.5s infinite;
+        }
+
+        .boss-warning::after {
+            content: '⚠';
+            position: absolute;
+            right: 20px;
+            font-size: 2em;
+            animation: warning-blink 0.5s infinite;
+        }
+
+        @keyframes warning-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Pixel perfect responsiveness */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .die {
+                width: 70px;
+                height: 70px;
+            }
+
+            .die-dot {
+                width: 10px;
+                height: 10px;
+            }
+
+            .dot-center { top: 30px; left: 30px; }
+            .dot-tl { top: 14px; left: 14px; }
+            .dot-tr { top: 14px; right: 14px; }
+            .dot-ml { top: 30px; left: 14px; }
+            .dot-mr { top: 30px; right: 14px; }
+            .dot-bl { bottom: 14px; left: 14px; }
+            .dot-br { bottom: 14px; right: 14px; }
+            
+            .pixel-btn {
+                font-size: 0.6em;
+                padding: 12px 20px;
+            }
+
+            .scoring-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* CRT glow effect */
+        .glow {
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { 
+                text-shadow: 
+                    0 0 10px var(--pixel-gold),
+                    0 0 20px var(--pixel-orange);
+            }
+            50% { 
+                text-shadow: 
+                    0 0 20px var(--pixel-gold),
+                    0 0 30px var(--pixel-orange),
+                    0 0 40px var(--pixel-red);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>⚄ ALEATOR ⚄</h1>
+            <div class="subtitle">The Dice Descends</div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat pixel-border-thin">
+                <div class="stat-label">Depth</div>
+                <div class="stat-value" id="stage">1</div>
+            </div>
+            <div class="stat pixel-border-thin">
+                <div class="stat-label">Round</div>
+                <div class="stat-value" id="round">1/13</div>
+            </div>
+            <div class="stat pixel-border-thin">
+                <div class="stat-label">Score</div>
+                <div class="stat-value glow" id="score">0</div>
+            </div>
+            <div class="stat pixel-border-thin">
+                <div class="stat-label">Gold</div>
+                <div class="stat-value" id="money">50</div>
+            </div>
+            <div class="stat pixel-border-thin">
+                <div class="stat-label">Rerolls</div>
+                <div class="stat-value" id="rerolls">2/2</div>
+            </div>
+        </div>
+
+        <div id="upgrades-display" class="upgrades-list"></div>
+
+        <div id="game-screen" class="game-area pixel-border">
+            <div id="stage-info" class="stage-info"></div>
+            
+            <div class="dice-container" id="dice-container"></div>
+
+            <div class="controls">
+                <button class="pixel-btn" id="roll-btn" onclick="roll()">⚄ Cast Dice</button>
+                <button class="pixel-btn pixel-btn-secondary" id="reset-holds-btn" onclick="resetHolds()" style="display:none;">Clear Holds</button>
+            </div>
+
+            <div id="message"></div>
+
+            <div class="scoring-options" id="scoring-options"></div>
+        </div>
+
+        <div id="shop-screen" class="game-area pixel-border" style="display: none;">
+            <h2 style="text-align: center; margin-bottom: 25px; color: var(--pixel-gold); font-size: 1.2em;">⛃ MERCHANT'S RELICS ⛃</h2>
+            <div id="shop-items" class="shop"></div>
+            <div class="controls">
+                <button class="pixel-btn" onclick="nextStage()">Descend Deeper →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ALEATOR_CATEGORIES = {
+            goblins: { name: "Goblins", desc: "Sum of all 1s", base: 1 },
+            kobolds: { name: "Kobolds", desc: "Sum of all 2s", base: 2 },
+            orcs: { name: "Orcs", desc: "Sum of all 3s", base: 3 },
+            trolls: { name: "Trolls", desc: "Sum of all 4s", base: 4 },
+            dragons: { name: "Dragons", desc: "Sum of all 5s", base: 5 },
+            demons: { name: "Demons", desc: "Sum of all 6s", base: 6 },
+            warband: { name: "War Band", desc: "3 matching (sum all)" },
+            legion: { name: "Legion", desc: "4 matching (sum all)" },
+            stronghold: { name: "Stronghold", desc: "3 + 2 matching (25)" },
+            march: { name: "March", desc: "4 in sequence (30)" },
+            crusade: { name: "Crusade", desc: "5 in sequence (40)" },
+            apocalypse: { name: "Apocalypse", desc: "5 matching (50)" },
+            chaos: { name: "Chaos", desc: "Sum of all dice" }
+        };
+
+        let gameState = {
+            stage: 1,
+            round: 1,
+            score: 0,
+            money: 50,
+            dice: [1, 1, 1, 1, 1],
+            held: [false, false, false, false, false],
+            rerolls: 2,
+            maxRerolls: 2,
+            usedCategories: {},
+            upgrades: [],
+            specialDice: [],
+            rolled: false,
+            isBoss: false,
+            targetScore: 0
+        };
+
+        function init() {
+            updateDisplay();
+            generateDice();
+            updateScoringOptions();
+        }
+
+        function createDieFace(value) {
+            const dots = {
+                1: ['dot-center'],
+                2: ['dot-tl', 'dot-br'],
+                3: ['dot-tl', 'dot-center', 'dot-br'],
+                4: ['dot-tl', 'dot-tr', 'dot-bl', 'dot-br'],
+                5: ['dot-tl', 'dot-tr', 'dot-center', 'dot-bl', 'dot-br'],
+                6: ['dot-tl', 'dot-tr', 'dot-ml', 'dot-mr', 'dot-bl', 'dot-br']
+            };
+
+            return dots[value].map(pos => `<div class="die-dot ${pos}"></div>`).join('');
+        }
+
+        function generateDice() {
+            const container = document.getElementById('dice-container');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < gameState.dice.length; i++) {
+                const die = document.createElement('div');
+                die.className = 'die pixel-border-thin';
+                if (gameState.specialDice.includes(i)) {
+                    die.classList.add('special');
+                }
+                if (gameState.held[i]) {
+                    die.classList.add('held');
+                }
+                die.innerHTML = createDieFace(gameState.dice[i]);
+                die.onclick = () => toggleHold(i);
+                container.appendChild(die);
+            }
+        }
+
+        function toggleHold(index) {
+            if (!gameState.rolled) return;
+            gameState.held[index] = !gameState.held[index];
+            generateDice();
+            document.getElementById('reset-holds-btn').style.display = 'inline-block';
+        }
+
+        function resetHolds() {
+            gameState.held = gameState.held.map(() => false);
+            generateDice();
+            document.getElementById('reset-holds-btn').style.display = 'none';
+        }
+
+        function roll() {
+            if (gameState.rerolls <= 0 && gameState.rolled) return;
+
+            for (let i = 0; i < gameState.dice.length; i++) {
+                if (!gameState.held[i]) {
+                    if (gameState.specialDice.includes(i)) {
+                        gameState.dice[i] = Math.random() < 0.3 ? 6 : Math.ceil(Math.random() * 6);
+                    } else {
+                        gameState.dice[i] = Math.ceil(Math.random() * 6);
+                    }
+                }
+            }
+
+            if (gameState.rolled) {
+                gameState.rerolls--;
+            }
+            gameState.rolled = true;
+
+            generateDice();
+            updateScoringOptions();
+            updateDisplay();
+
+            if (gameState.rerolls <= 0) {
+                document.getElementById('roll-btn').disabled = true;
+                document.getElementById('roll-btn').textContent = '⚄ No Rerolls';
+            }
+        }
+
+        function calculateScore(category, dice) {
+            const counts = {};
+            dice.forEach(d => counts[d] = (counts[d] || 0) + 1);
+            const values = Object.values(counts);
+            const sum = dice.reduce((a, b) => a + b, 0);
+
+            let baseScore = 0;
+
+            switch(category) {
+                case 'goblins': baseScore = (counts[1] || 0) * 1; break;
+                case 'kobolds': baseScore = (counts[2] || 0) * 2; break;
+                case 'orcs': baseScore = (counts[3] || 0) * 3; break;
+                case 'trolls': baseScore = (counts[4] || 0) * 4; break;
+                case 'dragons': baseScore = (counts[5] || 0) * 5; break;
+                case 'demons': baseScore = (counts[6] || 0) * 6; break;
+                case 'warband': baseScore = values.some(v => v >= 3) ? sum : 0; break;
+                case 'legion': baseScore = values.some(v => v >= 4) ? sum : 0; break;
+                case 'stronghold': baseScore = values.includes(3) && values.includes(2) ? 25 : 0; break;
+                case 'march': 
+                    const sortedDice = [...new Set(dice)].sort();
+                    baseScore = checkStraight(sortedDice, 4) ? 30 : 0;
+                    break;
+                case 'crusade': 
+                    const sortedDice2 = [...new Set(dice)].sort();
+                    baseScore = checkStraight(sortedDice2, 5) ? 40 : 0;
+                    break;
+                case 'apocalypse': baseScore = values.includes(5) ? 50 : 0; break;
+                case 'chaos': baseScore = sum; break;
+            }
+
+            let multiplier = 1;
+            if (gameState.upgrades.includes('blessed_dice') && baseScore > 0) {
+                multiplier += 0.5;
+            }
+            if (gameState.upgrades.includes('mystic_power') && (category === 'march' || category === 'crusade')) {
+                multiplier += 0.5;
+            }
+            if (gameState.upgrades.includes('golden_relic')) {
+                multiplier += 0.25;
+            }
+
+            return Math.floor(baseScore * multiplier);
+        }
+
+        function checkStraight(sortedDice, length) {
+            let consecutive = 1;
+            for (let i = 1; i < sortedDice.length; i++) {
+                if (sortedDice[i] === sortedDice[i-1] + 1) {
+                    consecutive++;
+                    if (consecutive >= length) return true;
+                } else if (sortedDice[i] !== sortedDice[i-1]) {
+                    consecutive = 1;
+                }
+            }
+            return consecutive >= length;
+        }
+
+        function updateScoringOptions() {
+            const container = document.getElementById('scoring-options');
+            container.innerHTML = '';
+
+            if (!gameState.rolled) {
+                container.innerHTML = '<p style="text-align:center; grid-column: 1/-1; font-size: 0.6em;">Cast the dice to reveal your fate!</p>';
+                return;
+            }
+
+            let maxScore = 0;
+            let maxCategory = null;
+
+            Object.keys(ALEATOR_CATEGORIES).forEach(cat => {
+                const score = calculateScore(cat, gameState.dice);
+                if (!gameState.usedCategories[cat] && score > maxScore) {
+                    maxScore = score;
+                    maxCategory = cat;
+                }
+            });
+
+            Object.keys(ALEATOR_CATEGORIES).forEach(cat => {
+                const option = document.createElement('div');
+                option.className = 'score-option pixel-border-thin';
+                if (gameState.usedCategories[cat]) {
+                    option.classList.add('used');
+                } else if (cat === maxCategory && maxScore > 0) {
+                    option.classList.add('best');
+                }
+
+                const score = calculateScore(cat, gameState.dice);
+                
+                option.innerHTML = `
+                    <div class="option-name">${ALEATOR_CATEGORIES[cat].name}</div>
+                    <div class="option-score">${score} pts</div>
+                `;
+
+                if (!gameState.usedCategories[cat]) {
+                    option.onclick = () => selectCategory(cat, score);
+                }
+
+                container.appendChild(option);
+            });
+        }
+
+        function selectCategory(category, score) {
+            gameState.usedCategories[category] = true;
+            gameState.score += score;
+            
+            const moneyEarned = Math.floor(score / 5) + 5;
+            gameState.money += moneyEarned;
+
+            showMessage(`Claimed ${score} points! +${moneyEarned} gold`, false);
+
+            if (gameState.isBoss) {
+                if (gameState.score >= gameState.targetScore) {
+                    showMessage(`Victory! Boss vanquished at ${gameState.score} points!`, false);
+                    setTimeout(() => showShop(), 2000);
+                    return;
+                } else {
+                    nextRound();
+                }
+            } else {
+                nextRound();
+            }
+        }
+
+        function nextRound() {
+            gameState.round++;
+            
+            if (gameState.round > 13) {
+                if (gameState.isBoss) {
+                    if (gameState.score >= gameState.targetScore) {
+                        showMessage('Depth conquered!', false);
+                        setTimeout(() => showShop(), 2000);
+                    } else {
+                        showMessage('The darkness consumed you...', true);
+                        setTimeout(() => location.reload(), 3000);
+                    }
+                } else {
+                    showMessage('Depth complete!', false);
+                    setTimeout(() => showShop(), 2000);
+                }
+                return;
+            }
+
+            gameState.dice = Array(gameState.dice.length).fill(1);
+            gameState.held = Array(gameState.dice.length).fill(false);
+            gameState.rerolls = gameState.maxRerolls;
+            gameState.rolled = false;
+            
+            document.getElementById('roll-btn').disabled = false;
+            document.getElementById('roll-btn').textContent = '⚄ Cast Dice';
+            document.getElementById('reset-holds-btn').style.display = 'none';
+
+            updateDisplay();
+            generateDice();
+            updateScoringOptions();
+        }
+
+        function showShop() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('shop-screen').style.display = 'block';
+
+            const shopContainer = document.getElementById('shop-items');
+            shopContainer.innerHTML = '';
+
+            const items = [
+                { 
+                    name: 'Fortune\'s Favor', 
+                    desc: 'Gain +1 reroll permanently', 
+                    cost: 50, 
+                    effect: () => {
+                        gameState.maxRerolls++;
+                        gameState.upgrades.push('extra_reroll');
+                    }
+                },
+                { 
+                    name: 'Blessed Dice', 
+                    desc: 'All scores increased by 50%', 
+                    cost: 75, 
+                    effect: () => gameState.upgrades.push('blessed_dice')
+                },
+                { 
+                    name: 'Bone of Power', 
+                    desc: 'Add a 6th die to your pool', 
+                    cost: 100, 
+                    effect: () => {
+                        gameState.dice.push(1);
+                        gameState.held.push(false);
+                        gameState.upgrades.push('sixth_die');
+                    }
+                },
+                { 
+                    name: 'Mystic Die', 
+                    desc: 'Enchant one die (favors 6s)', 
+                    cost: 80, 
+                    effect: () => {
+                        if (gameState.specialDice.length < gameState.dice.length) {
+                            const available = [];
+                            for (let i = 0; i < gameState.dice.length; i++) {
+                                if (!gameState.specialDice.includes(i)) {
+                                    available.push(i);
+                                }
+                            }
+                            const randomIndex = available[Math.floor(Math.random() * available.length)];
+                            gameState.specialDice.push(randomIndex);
+                            gameState.upgrades.push('mystic_die_' + randomIndex);
+                        }
+                    }
+                },
+                { 
+                    name: 'Golden Relic', 
+                    desc: 'Boost all scores by 25%', 
+                    cost: 60, 
+                    effect: () => gameState.upgrades.push('golden_relic')
+                },
+                { 
+                    name: 'Mystic Power', 
+                    desc: '+50% to March & Crusade', 
+                    cost: 65, 
+                    effect: () => gameState.upgrades.push('mystic_power')
+                }
+            ];
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'shop-item pixel-border-thin';
+                div.innerHTML = `
+                    <h3>${item.name}</h3>
+                    <p>${item.desc}</p>
+                    <div class="price">${item.cost} Gold</div>
+                    <button class="pixel-btn" onclick="buyItem('${item.name}', ${item.cost})" 
+                            ${gameState.money < item.cost ? 'disabled' : ''}>
+                        ${gameState.money < item.cost ? 'Too Poor' : 'Purchase'}
+                    </button>
+                `;
+                shopContainer.appendChild(div);
+            });
+
+            updateDisplay();
+        }
+
+        function buyItem(name, cost) {
+            if (gameState.money < cost) return;
+
+            gameState.money -= cost;
+
+            const items = {
+                'Fortune\'s Favor': () => {
+                    gameState.maxRerolls++;
+                    gameState.upgrades.push('extra_reroll');
+                },
+                'Blessed Dice': () => gameState.upgrades.push('blessed_dice'),
+                'Bone of Power': () => {
+                    gameState.dice.push(1);
+                    gameState.held.push(false);
+                    gameState.upgrades.push('sixth_die');
+                },
+                'Mystic Die': () => {
+                    if (gameState.specialDice.length < gameState.dice.length) {
+                        const available = [];
+                        for (let i = 0; i < gameState.dice.length; i++) {
+                            if (!gameState.specialDice.includes(i)) {
+                                available.push(i);
+                            }
+                        }
+                        const randomIndex = available[Math.floor(Math.random() * available.length)];
+                        gameState.specialDice.push(randomIndex);
+                        gameState.upgrades.push('mystic_die_' + randomIndex);
+                    }
+                },
+                'Golden Relic': () => gameState.upgrades.push('golden_relic'),
+                'Mystic Power': () => gameState.upgrades.push('mystic_power')
+            };
+
+            items[name]();
+            showMessage(`Acquired ${name}!`, false);
+            showShop();
+        }
+
+        function nextStage() {
+            gameState.stage++;
+            gameState.round = 1;
+            gameState.usedCategories = {};
+            gameState.rerolls = gameState.maxRerolls;
+            gameState.rolled = false;
+
+            gameState.isBoss = gameState.stage % 3 === 0;
+            
+            if (gameState.isBoss) {
+                gameState.targetScore = 200 + (gameState.stage * 50);
+            }
+
+            document.getElementById('game-screen').style.display = 'block';
+            document.getElementById('shop-screen').style.display = 'none';
+
+            updateDisplay();
+            generateDice();
+            updateScoringOptions();
+        }
+
+        function updateDisplay() {
+            document.getElementById('stage').textContent = gameState.stage;
+            document.getElementById('round').textContent = `${gameState.round}/13`;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('money').textContent = gameState.money;
+            document.getElementById('rerolls').textContent = `${gameState.rerolls}/${gameState.maxRerolls}`;
+
+            const upgradesDisplay = document.getElementById('upgrades-display');
+            if (gameState.upgrades.length > 0) {
+                const uniqueUpgrades = [...new Set(gameState.upgrades.filter(u => !u.startsWith('mystic_die_')))];
+                const specialDiceCount = gameState.upgrades.filter(u => u.startsWith('mystic_die_')).length;
+                
+                if (specialDiceCount > 0) {
+                    uniqueUpgrades.push(`${specialDiceCount}x Mystic`);
+                }
+
+                upgradesDisplay.innerHTML = uniqueUpgrades.map(u => 
+                    `<div class="upgrade-badge pixel-border-thin">${u.replace(/_/g, ' ')}</div>`
+                ).join('');
+            } else {
+                upgradesDisplay.innerHTML = '';
+            }
+
+            const stageInfo = document.getElementById('stage-info');
+            if (gameState.isBoss) {
+                stageInfo.innerHTML = `<div class="boss-warning pixel-border-thin">Boss Depth ${gameState.stage}<br>Target: ${gameState.targetScore} Points</div>`;
+            } else {
+                stageInfo.innerHTML = `Depth ${gameState.stage} • Round ${gameState.round}/13`;
+            }
+        }
+
+        function showMessage(text, isWarning) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.className = 'message pixel-border-thin' + (isWarning ? ' warning' : '');
+            msgDiv.textContent = text;
+            setTimeout(() => msgDiv.textContent = '', 3000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
