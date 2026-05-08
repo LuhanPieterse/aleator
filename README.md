@@ -1,0 +1,2 @@
+# aleator
+Yathzee-Roguelike concept
