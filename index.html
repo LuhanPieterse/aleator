@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALEATOR - The Dice Descends</title>
+    <title>TESSERAE - The Dice Descends</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -554,7 +554,7 @@
 <body>
     <div class="game-container">
         <div class="header">
-            <h1>⚄ ALEATOR ⚄</h1>
+            <h1>⚄ TESSERAE ⚄</h1>
             <div class="subtitle">The Dice Descends</div>
         </div>
 
@@ -608,7 +608,7 @@
     </div>
 
     <script>
-        const ALEATOR_CATEGORIES = {
+        const TESSERAE_CATEGORIES = {
             goblins: { name: "Goblins", desc: "Sum of all 1s", base: 1 },
             kobolds: { name: "Kobolds", desc: "Sum of all 2s", base: 2 },
             orcs: { name: "Orcs", desc: "Sum of all 3s", base: 3 },
@@ -789,7 +789,7 @@
             let maxScore = 0;
             let maxCategory = null;
 
-            Object.keys(ALEATOR_CATEGORIES).forEach(cat => {
+            Object.keys(TESSERAE_CATEGORIES).forEach(cat => {
                 const score = calculateScore(cat, gameState.dice);
                 if (!gameState.usedCategories[cat] && score > maxScore) {
                     maxScore = score;
@@ -797,7 +797,7 @@
                 }
             });
 
-            Object.keys(ALEATOR_CATEGORIES).forEach(cat => {
+            Object.keys(TESSERAE_CATEGORIES).forEach(cat => {
                 const option = document.createElement('div');
                 option.className = 'score-option pixel-border-thin';
                 if (gameState.usedCategories[cat]) {
@@ -809,7 +809,7 @@
                 const score = calculateScore(cat, gameState.dice);
                 
                 option.innerHTML = `
-                    <div class="option-name">${ALEATOR_CATEGORIES[cat].name}</div>
+                    <div class="option-name">${TESSERAE_CATEGORIES[cat].name}</div>
                     <div class="option-score">${score} pts</div>
                 `;
 
